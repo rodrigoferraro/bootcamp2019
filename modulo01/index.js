@@ -16,11 +16,35 @@ const users = ["Rodrigo", "Roberto", "Rogério", "Rock'n Roll"];
     senão a aplicação ficará SUSPENSA neste ponto.
 */
 app.use((req, res, next) => {
-  console.time('Requisição');
-  console.log(`Método: ${req.method}; URL: ${req.url}`);
+  //console.time('Requisição nível App');
+  //console.log(`Método: ${req.method}; URL: ${req.url}`);
   next();
-  console.timeEnd('Requisição');
+  //console.timeEnd('Requisição nível App');
 })
+/* elaboração de Middleware específico para Rotas
+    => acrescenta-se a "função do middleware" na chamada da Rota
+      que neste exemplo será: PUT e POST
+*/
+// => se não existe o campo "name" no body do request, emite msg.
+function checkUserExists(req, res, next){
+  if (!req.body.name){
+    return res.status(400).json({error: 'User name is required'})
+  }
+  return next();
+}
+// => se não existe o index informado, não realiza operação (e não dá erro)
+// => OBS.: o middleware pode modificar as variaveis (req, res)
+function checkUserInArray(req, res, next){
+  const user = users[req.params.index-1];
+
+  if (!user){
+    return res.status(400).json({error: 'User does not exists'})
+  }
+
+  req.user = user;
+
+  return next();
+}
 
 // rota listagem de usuários
 app.get('/users', (req, res) => {
@@ -28,17 +52,16 @@ app.get('/users', (req, res) => {
 })
 
 // rota mostra um usuário específico
-app.get('/users/:index', (req, res) => {
-  const { index } = req.params;
-
-  return res.json(users[index-1]);
+app.get('/users/:index', checkUserInArray, (req, res) => {
+  return res.json(req.user);
 })
 
 // rota inclusão de usuário {Body}
-// para o expresse ler o formato JSON do Body da Request, é necessário incluir esta funcionalidade no express através do use(JSON)
-app.post('/users', (req, res) => {
+/* para o expresse ler o formato JSON do Body da Request, 
+    é necessário incluir esta funcionalidade no express através do use(JSON)
+*/
+app.post('/users', checkUserExists, (req, res) => {
   const { name } = req.body
-
   
   users.push(name);
 
@@ -46,7 +69,7 @@ app.post('/users', (req, res) => {
 })
 
 // rota edição de usuário
-app.put('/users/:index', (req, res) => {
+app.put('/users/:index', checkUserExists, checkUserInArray, (req, res) => {
   const { index } = req.params;
   const { name } = req.body;
 
@@ -56,7 +79,7 @@ app.put('/users/:index', (req, res) => {
 })
 
 // rota exclusão de usuário
-app.delete('/users/:index', (req, res) => {
+app.delete('/users/:index', checkUserInArray, (req, res) => {
   const { index } = req.params;
 
   users.splice(index-1, 1);
