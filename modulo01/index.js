@@ -10,6 +10,18 @@ app.use(express.json());
 // utilizamos um array local, e no route params, informamos o índice do elemento do array que vai mostrar na tela
 const users = ["Rodrigo", "Roberto", "Rogério", "Rock'n Roll"];
 
+// MIDDLEWARE
+/* sempre que houver uma requisição em qualquer rota da aplicação, 
+    o fluxo passará por aqui, porém, para prosseguir devemos retornar NEXT(),
+    senão a aplicação ficará SUSPENSA neste ponto.
+*/
+app.use((req, res, next) => {
+  console.time('Requisição');
+  console.log(`Método: ${req.method}; URL: ${req.url}`);
+  next();
+  console.timeEnd('Requisição');
+})
+
 // rota listagem de usuários
 app.get('/users', (req, res) => {
   return res.json(users);
