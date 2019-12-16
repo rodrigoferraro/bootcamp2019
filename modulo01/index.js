@@ -3,10 +3,13 @@ const express = require('express');
 const app = express();
 // Query params = /users?nome=Rodrigo
 // Route params = /users/12
-app.get('/users/:id', (req, res) => {
-  const { id } = req.params;
+// utilizamos um array local, e no route params, informamos o índice do elemento do array que vai mostrar na tela
+const users = ["Rodrigo", "Roberto", "Rogério", "Rock'n Roll"];
 
-  return res.json({message: `Buscando usuário ${id}`});
+app.get('/users/:index', (req, res) => {
+  const { index } = req.params;
+
+  return res.json(users[index-1]);
 })
 
 app.listen(3333);
