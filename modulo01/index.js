@@ -1,7 +1,7 @@
 const express = require('express');
 
 const app = express();
-// Query params = ?teste=1
+// Query params = /users?nome=Rodrigo
 app.get('/users', (req, res) => {
   const nome = req.query.nome;
 
