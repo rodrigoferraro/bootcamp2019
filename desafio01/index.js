@@ -5,10 +5,6 @@ const server = express();
 server.use(express.json());
 server.listen(3333);
 
-const requisicoes = {
-  "count":0
-};
-
 const projetos = [
   {
     "id": 1,
@@ -25,7 +21,10 @@ const projetos = [
 // MIDDLEWARE verifica se projeto com ID informado existe, 
 //    => se não, retorna mensagem erro
 function projectExists(req, res, next){
-  const id = req.params.id;
+  const { id } = req.params;
+  // mesmo sabendo que o índice do projeto só é utilizado no DELETE,
+  // achei melhor utilizá-lo para poder obter Idx e Projeto com
+  // somente uma chamada de "pesquisa" no array dos projetos
   req.idx = projetos.findIndex(p=>p.id==id);
   if (req.idx < 0){
     return res.status(400).json({error: `Project id=${id} not found`})
@@ -35,8 +34,7 @@ function projectExists(req, res, next){
 }
 // MIDDLEWARE contabiliza quantas requisições foram feitas para a aplicação
 function countRequests(req, res, next){
-  requisicoes.count++;
-  console.log(`Até agora foram recebidas ${requisicoes.count} requisições`)
+  console.count('Número de requisições recebidas até agora')
   next()
 }
 server.use(countRequests);
@@ -45,8 +43,8 @@ server.use(countRequests);
 server.post('/projetos', (req, res) => {
   const { id, title, tasks } = req.body;
   const projeto = {
-    "id": id,
-    "title": title,
+    id,
+    title,
     "tasks": tasks
   }
   projetos.push(projeto)
