@@ -5,6 +5,9 @@ const server = express();
 server.use(express.json());
 server.listen(3333);
 
+const requisicoes = {
+  "count":0
+};
 
 const projetos = [
   {
@@ -18,6 +21,25 @@ const projetos = [
     "tasks": ['task 1', 'task 2', 'task 3']
   }
 ]
+
+// MIDDLEWARE verifica se projeto com ID informado existe, 
+//    => se não, retorna mensagem erro
+function projectExists(req, res, next){
+  const id = req.params.id;
+  req.idx = projetos.findIndex(p=>p.id==id);
+  if (req.idx < 0){
+    return res.status(400).json({error: `Project id=${id} not found`})
+  }
+  req.projeto = projetos[req.idx];
+  return next();
+}
+// MIDDLEWARE contabiliza quantas requisições foram feitas para a aplicação
+function countRequests(req, res, next){
+  requisicoes.count++;
+  console.log(`Até agora foram recebidas ${requisicoes.count} requisições`)
+  next()
+}
+server.use(countRequests);
 
 // Insere um projeto
 server.post('/projetos', (req, res) => {
@@ -37,66 +59,37 @@ server.get('/projetos', (req, res) => {
 })
 
 // Lista um projeto específico
-server.get('/projetos/:id', (req, res) => {
-  const id = req.params.id;
-  const projeto = projetos.find(p => p.id == id);
-  if (!projeto) {
-    return res.json({ message: `Project id=${id} not found` })
-  }
-  return res.json(projeto);
+//    => com o middleware verificando a existencia do projeto
+//        o código da Rota ficou bem mais simples
+server.get('/projetos/:id', projectExists, (req, res) => {
+  return res.json(req.projeto);
 })
 
 // Modifica o 'title' de um projeto específico
-function updateTitle(id, title) {
-  for (var i in projetos) {
-    if (projetos[i].id == id) {
-      projetos[i].title = title;
-      return projetos[i];
-    }
-  }
-  return undefined;
-}
-server.put('/projetos/:id', (req, res) => {
-  const id = req.params.id;
+//    => novamente com o middleware verificando a existencia, ficou muito mais simples
+server.put('/projetos/:id', projectExists, (req, res) => {
   const { title } = req.body;
-  const p = updateTitle(id, title);
-  if (!p) {
-    return res.json({ message: `Project id=${id} not found` })
-  }
-  return res.json(p);
+  if (!title) {
+    return res.status(400).json({error: 'Title required' })
+  }  
+  req.projeto.title = title
+  return res.json(req.projeto);
 })
 
 // Remove um projeto específico
-server.delete('/projetos/:id', (req, res) => {
-  const id = req.params.id;
-  const p = projetos.find(p => p.id == id);
-  if (!p) {
-    return res.json({ message: `Project id=${id} not found` })
-  }
-  projetos.pop(p);
+//    => 
+server.delete('/projetos/:id', projectExists, (req, res) => {
+  projetos.splice(req.idx, 1);
+  const p = req.projeto;
   return res.json({ message: 'Project removed from projects list', p })
 })
 
 // Insere uma única tarefa no array de tarefas de um projeto específico
-function insereTask(id, task) {
-  for (var i in projetos) {
-    if (projetos[i].id == id) {
-      projetos[i].tasks.push(task);
-      return projetos[i];
-    }
+server.post('/projetos/:id/tasks', projectExists, (req, res) => {
+  const { title } = req.body;
+  if (!title) {
+    return res.json({ message: 'Title required for new task' })
   }
-  return undefined;
-}
-
-server.post('/projetos/:id/tasks', (req, res) => {
-  const id = req.params.id;
-  const { task } = req.body;
-  if (!task) {
-    return res.json({ message: 'Task required' })
-  }
-  const p = insereTask(id, task);
-  if (!p) {
-    return res.json({ message: `Project id=${id} not found` })
-  }
-  return res.json(p);
+  req.projeto.tasks.push(title);
+  return res.json(req.projeto);
 })
