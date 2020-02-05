@@ -1,11 +1,11 @@
-import React from 'react'
-import './App.css'
+import React from "react";
+import "./App.css";
 
-import profile from './assets/avatar.png'
-import TechList from './components/TechList'
+import profile from "./assets/avatar.png";
+import TechList from "./components/TechList";
 
-function App(){
-  return <TechList />
+function App() {
+  return <TechList />;
 }
 
-export default App
+export default App;
