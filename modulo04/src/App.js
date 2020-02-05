@@ -1,7 +1,11 @@
 import React from 'react'
+import './App.css'
+
+import profile from './assets/avatar.png'
+import TechList from './components/TechList'
 
 function App(){
-  return <h1>Hello react world</h1>
+  return <TechList />
 }
 
 export default App
