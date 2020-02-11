@@ -1,9 +1,10 @@
 import React, { Component } from "react";
+import TechItem from './TechItem'
 
 class TechList extends Component {
   state = {
     newTech: "",
-    techs: ["Node.js", "ReactJS", "React Native"]
+    techs: []
   };
 
   handleInputChange = e => {
@@ -27,16 +28,32 @@ class TechList extends Component {
     });
   };
 
+  componentDidMount(){
+    const techs = localStorage.getItem('techs')
+
+    if (techs){
+      this.setState({techs: JSON.parse(techs)})
+    }
+  }
+
+  //componentDidUpdate(prevProps, prevState){
+  componentDidUpdate(_, prevState){
+    if (prevState.techs !== this.state.techs){
+      localStorage.setItem('techs', JSON.stringify(this.state.techs))
+    }
+  }
+
   render() {
     return (
       <form onSubmit={this.handleSubmit}>
         <ul>
           {this.state.techs.map(t => (
-            <li key={t}>
-              {t}
-              <button onClick={()=>this.handleDelete(t)} type="button"> _X_ </button>
-            </li>
-          ))}
+            <TechItem 
+              key={t} 
+              tech={t}
+              onDelete={() => this.handleDelete(t)}
+            />)) 
+          }
         </ul>
         <input
           type="text"
